@@ -52,7 +52,7 @@ namespace ProcesarArchivoMudanzas.Controllers
                 //Console.WriteLine("Case #3: " + CalcularViajes(linea3));
                 //Console.WriteLine("Case #4: " + CalcularViajes(linea4));
                 //Console.WriteLine("Case #5: " + CalcularViajes(linea5));
-                Console.ReadLine();
+                //Console.ReadLine();
                 return 1;
                 //return Json(new { exitoso = false, mensaje = "No se encontraron archivos" });
             }
