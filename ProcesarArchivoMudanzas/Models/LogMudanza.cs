@@ -9,7 +9,7 @@ namespace ProcesarArchivoMudanzas.Models
     {
         public int Id { get; set; }
         public int Documento { get; set; }
-        public DateTime ProcessDate { get; set; }
-        public int CaseNumber { get; set; }
+        public DateTime FechaProceso { get; set; }
+        public string NumeroViajes { get; set; }
     }
 }

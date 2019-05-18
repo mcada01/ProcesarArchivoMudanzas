@@ -11,6 +11,8 @@ using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Web.Http.Results;
+using ProcesarArchivoMudanzas.Database;
+using ProcesarArchivoMudanzas.Models;
 
 namespace ProcesarArchivoMudanzas.Controllers
 {
@@ -38,7 +40,7 @@ namespace ProcesarArchivoMudanzas.Controllers
                     var txt = result.Split('\r').ToList();
                     txt.Remove("");
 
-                    var resultadoFinal = ProcesarDiasDeTrabajo(txt);
+                    var resultadoFinal = ProcesarDiasDeTrabajo(txt, id);
 
                     // descargar archivo generado
                     HttpResponseMessage httpResponseMessage = new HttpResponseMessage(HttpStatusCode.Accepted)
@@ -65,7 +67,25 @@ namespace ProcesarArchivoMudanzas.Controllers
             }
         }
 
-        private string ProcesarDiasDeTrabajo(List<string> txt)
+        private void GuardarLog(int id, string resultadoFinal)
+        {
+            using (var context = new MudanzasDbContext())
+            {
+
+                var log = new LogMudanza()
+                {
+                    Id = 0,
+                    Documento = id,//asignar el documento que viene del front
+                    FechaProceso = DateTime.Now,
+                    NumeroViajes = resultadoFinal
+                };
+
+                context.LogMudanza.Add(log);
+                context.SaveChanges();
+            }
+        }
+
+        private string ProcesarDiasDeTrabajo(List<string> txt, int id)
         {
             List<int> listadoInicial = new List<int>();
 
@@ -87,7 +107,11 @@ namespace ProcesarArchivoMudanzas.Controllers
                     listaPesoObjetosPorDia.Add(listadoInicial[c]);
                 }
 
-                resultado = string.Concat(resultado, "Case #" + diaNumero + ": " + CalcularViajes(listaPesoObjetosPorDia), Environment.NewLine);
+                var resultadoxDia = "Case #" + diaNumero + ": " + CalcularViajes(listaPesoObjetosPorDia);
+
+                resultado = string.Concat(resultado, resultadoxDia , Environment.NewLine);
+
+                GuardarLog(id, resultadoxDia);
 
                 z = c - 1;
             }
@@ -122,6 +146,8 @@ namespace ProcesarArchivoMudanzas.Controllers
 
             return viajes;
         }
+
+       
 
     }
 }
