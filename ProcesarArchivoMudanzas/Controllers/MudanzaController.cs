@@ -18,61 +18,32 @@ namespace ProcesarArchivoMudanzas.Controllers
     public class MudanzaController : ApiController
     {
         [HttpPost]
-        [Route("PostProcesarArchivo")]
-        public IHttpActionResult PostProcesarArchivo()
+        [Route("PostProcesarArchivo/{id}")]
+        public IHttpActionResult PostProcesarArchivo(int id)
         {
             try
             {
-                List<int> listadoInicial = new List<int>();
-
+               
                 if (HttpContext.Current.Request.Files.AllKeys.Any())
                 {
                     // obtener el archivo publicado
-                    var Archivo = HttpContext.Current.Request.Files["ArchivoSeleccionado"];
+                    var archivo = HttpContext.Current.Request.Files["ArchivoSeleccionado"];
 
-                    Stream fs = Archivo.InputStream;
+                    Stream fs = archivo.InputStream;
                     var streamReader = new StreamReader(fs);
+
                     // leer el archivo
                     var result = streamReader.ReadToEnd();
                     result = result.Replace("\n", "");
                     var txt = result.Split('\r').ToList();
                     txt.Remove("");
 
-                    listadoInicial = txt.Select(x => Convert.ToInt32(x)).ToList();
-                    List<string> Resultado = new List<string>();
-                    int DiaNumero = 0;
-                    int c;
-                    // construir un listado con el resultado que debe generar la salida
-                    for (int z = 1; z < listadoInicial.Count; z++)
-                    {
-                        DiaNumero++;
-                        var NumeroObjetos = listadoInicial[z];
-                        List<int> listaPesoObjetosPorDia = new List<int>();
+                    var resultadoFinal = ProcesarDiasDeTrabajo(txt);
 
-                        for (c = z+1; c <= (z+NumeroObjetos); c++)
-                        {
-                            listaPesoObjetosPorDia.Add(listadoInicial[c]);
-                        }
-                        
-                        Resultado.Add("Case #" + DiaNumero + ": " + CalcularViajes(listaPesoObjetosPorDia));
-                        z = c-1;
-                    }
-                    // crear el archivo y poblarlo
-                    //StreamContent file;
-                    using (StreamWriter miArchivo = new StreamWriter(@"C:\ArchivoSalida.txt"))
+                    // descargar archivo generado
+                    HttpResponseMessage httpResponseMessage = new HttpResponseMessage(HttpStatusCode.Accepted)
                     {
-                        foreach (string linea in Resultado)
-                        {
-                            miArchivo.WriteLine(linea);
-                        }
-                        miArchivo.Close();
-                        //file = new StreamContent(miArchivo.BaseStream);
-                        
-                    }
-
-                    HttpResponseMessage httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new StreamContent(File.Open(@"C:\ArchivoSalida.txt",FileMode.Open,FileAccess.Read))
+                        Content = new StringContent(resultadoFinal)
                     };
                     httpResponseMessage.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
                     {
@@ -82,20 +53,46 @@ namespace ProcesarArchivoMudanzas.Controllers
 
                     ResponseMessageResult responseMessageResult = ResponseMessage(httpResponseMessage);
                     return responseMessageResult;
-                    // descargar archivo generado
-                    
-                    //return Json(new { exitoso = false });
                 }
                 else
                 {
-                    return Json(new { exitoso = false, mensaje = "No se encontraron archivos" });
+                    return null;
                 }
             }
             catch (Exception ex)
             {
-                return Json(new { exitoso = false, mensaje = ex.Message });
-                //return 0;
+                return Json(ex.Message);
             }
+        }
+
+        private string ProcesarDiasDeTrabajo(List<string> txt)
+        {
+            List<int> listadoInicial = new List<int>();
+
+            listadoInicial = txt.Select(x => Convert.ToInt32(x)).ToList();
+            int diaNumero = 0;
+            int c;
+
+            string resultado = "";
+
+            // construir un listado con el resultado que debe generar la salida
+            for (int z = 1; z < listadoInicial.Count; z++)
+            {
+                diaNumero++;
+                var numeroObjetos = listadoInicial[z];
+                List<int> listaPesoObjetosPorDia = new List<int>();
+
+                for (c = z + 1; c <= (z + numeroObjetos); c++)
+                {
+                    listaPesoObjetosPorDia.Add(listadoInicial[c]);
+                }
+
+                resultado = string.Concat(resultado, "Case #" + diaNumero + ": " + CalcularViajes(listaPesoObjetosPorDia), Environment.NewLine);
+
+                z = c - 1;
+            }
+
+            return resultado;
         }
 
         public static int CalcularViajes(List<int> elementos)
