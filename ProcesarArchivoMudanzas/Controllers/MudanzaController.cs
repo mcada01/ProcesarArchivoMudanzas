@@ -35,14 +35,14 @@ namespace ProcesarArchivoMudanzas.Controllers
                     var streamReader = new StreamReader(fs);
 
                     // leer el archivo
-                    var result = streamReader.ReadToEnd();
-                    result = result.Replace("\n", "");
-                    var txt = result.Split('\r').ToList();
-                    txt.Remove("");
+                    var archivoLeido = streamReader.ReadToEnd();
+                    archivoLeido = archivoLeido.Replace("\n", "");
+                    var listado = archivoLeido.Split('\r').ToList();
+                    listado.Remove("");
 
-                    var resultadoFinal = ProcesarDiasDeTrabajo(txt, id);
+                    var resultadoFinal = ProcesarDiasDeTrabajo(listado, id);
 
-                    // descargar archivo generado
+                    // descargar archivo generado en memoria
                     HttpResponseMessage httpResponseMessage = new HttpResponseMessage(HttpStatusCode.Accepted)
                     {
                         Content = new StringContent(resultadoFinal)
@@ -121,7 +121,7 @@ namespace ProcesarArchivoMudanzas.Controllers
 
         public static int CalcularViajes(List<int> elementos)
         {
-            var pivot = elementos.Max(); //sacar el elemento de mayor peso
+            var pivot = elementos.Max(); 
             elementos.Remove(pivot);
 
             var peso = 0;
@@ -133,7 +133,7 @@ namespace ProcesarArchivoMudanzas.Controllers
                 if (elementos.Count == 0) //si no hay mas elementos
                     return 0;
 
-                var masBajo = elementos.Min(); //sacar el elemento de menor peso
+                var masBajo = elementos.Min(); 
                 elementos.Remove(masBajo);
                 i++;
                 peso = pivot * i;
